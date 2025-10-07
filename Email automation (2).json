@@ -1,0 +1,444 @@
+{
+  "name": "My workflow 8",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -976,
+        192
+      ],
+      "id": "93144cb9-ab20-454c-b8a8-6910169199ee",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        0
+      ],
+      "id": "3f58299d-196c-4f1e-b9df-5980184cef62",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1vwHms74_kN7z_wSO5c_0yYX9QAEGKKu0oKjsbGSFTHM",
+          "mode": "list",
+          "cachedResultName": "Automation Email",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vwHms74_kN7z_wSO5c_0yYX9QAEGKKu0oKjsbGSFTHM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 579716171,
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vwHms74_kN7z_wSO5c_0yYX9QAEGKKu0oKjsbGSFTHM/edit#gid=579716171"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -752,
+        96
+      ],
+      "id": "da8ad49a-3583-4f88-8fb6-5cbc9ec57a1f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AOlw7VVz75m5y572",
+          "name": "Bhuvan Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node — returns items with normalized fields and AttachmentPath or null\nconst now = new Date();\n\nreturn items\n  .filter(item => {\n    const data = item.json;\n\n    // skip rows missing email or not pending or opted out or scheduled for future\n    if (!data.Email) return false;\n    if (data.Status && data.Status.toLowerCase() !== 'pending') return false;\n    if (data.OptOut && data.OptOut.toLowerCase() === 'yes') return false;\n    if (data.SendAt) {\n      const sendTime = new Date(data.SendAt);\n      if (sendTime > now) return false;\n    }\n    return true;\n  })\n  .map(item => {\n    // clone json\n    let row = { ...item.json };\n\n    // personalize fields\n    if (row.FirstName) {\n      row.Subject = (row.Subject || \"\").replace(/{{FirstName}}/g, row.FirstName);\n      row.Body = (row.Body || \"\").replace(/{{FirstName}}/g, row.FirstName);\n    }\n\n    // Normalize CC / BCC to empty string if not provided\n    row.CC = row.CC ? String(row.CC).trim() : \"\";\n    row.BCC = row.BCC ? String(row.BCC).trim() : \"\";\n\n    // Normalize attachments column:\n    // If you store a path like \"C:\\Users\\you\\file.pdf\" or \"/home/you/file.pdf\"\n    // keep that path in AttachmentPath, otherwise null.\n    row.AttachmentPath = row.Attachments && String(row.Attachments).trim()\n      ? String(row.Attachments).trim()\n      : null;\n\n    return { json: row };\n  });\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        96
+      ],
+      "id": "357f56ba-da89-4bbd-b667-adf02949edff",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"Email\"]}}",
+        "subject": "={{$json[\"Subject\"]}}",
+        "message": "={{$json[\"Body\"]}}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          },
+          "bccList": "={{$json.BCC}}",
+          "ccList": "={{$json.CC}}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        0
+      ],
+      "id": "98f3cd4e-4bdb-49fd-b5af-2d22ce920c4b",
+      "name": "Send a message",
+      "webhookId": "3c5de368-7b8f-4848-b8b4-7e73e3c6c93c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ap3RKmtOqlvwYAd4",
+          "name": "Bhuvan Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1vwHms74_kN7z_wSO5c_0yYX9QAEGKKu0oKjsbGSFTHM",
+          "mode": "list",
+          "cachedResultName": "Automation Email",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vwHms74_kN7z_wSO5c_0yYX9QAEGKKu0oKjsbGSFTHM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 579716171,
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vwHms74_kN7z_wSO5c_0yYX9QAEGKKu0oKjsbGSFTHM/edit#gid=579716171"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Sent",
+            "SendAt": "={{$now}}",
+            "Output": "Sent successfully",
+            "row_number": "=\n{{ $('Code in JavaScript').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "RecipientID",
+              "displayName": "RecipientID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "FirstName",
+              "displayName": "FirstName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Body",
+              "displayName": "Body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SendAt",
+              "displayName": "SendAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Output",
+              "displayName": "Output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        368,
+        96
+      ],
+      "id": "a8dc3f57-f063-4387-a5d6-e889592fe0a3",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AOlw7VVz75m5y572",
+          "name": "Bhuvan Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.Attachments }}",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "e7554901-2f16-45a9-be7e-7e5afed0a96f",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "LynKNTlLpd1xzEJN",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0db697a9-6bd4-45cb-8b35-e4572522d5f8",
+              "leftValue": "={{ $json.Attachments }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        96
+      ],
+      "id": "65984dbd-94b3-4bd0-bb16-94e7d3c40518",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$json[\"Email\"]}}",
+        "subject": "={{$json[\"Subject\"]}}",
+        "message": "={{$json[\"Body\"]}}",
+        "options": {
+          "bccList": "={{$json.BCC}}",
+          "ccList": "={{$json.CC}}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        192
+      ],
+      "id": "8785ddac-a52c-4a18-9f1d-a0d97d788faa",
+      "name": "Send a message1",
+      "webhookId": "3c5de368-7b8f-4848-b8b4-7e73e3c6c93c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ap3RKmtOqlvwYAd4",
+          "name": "Gmail account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4740c9dd-b3f0-4336-882d-819c45df7158",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5229ad676c3a8d293c6db345f673ae85f2faeec97332d940e6b8ecea4c050d50"
+  },
+  "id": "SDkE7i29seqNi0t9",
+  "tags": []
+}
